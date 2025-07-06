@@ -13,15 +13,19 @@ def main():
     # Defining possible arguments
     group.add_argument("-p", "--price", action="store_true", help="See BTC actual price")
     group.add_argument("-b", "--backtest", action="store_true", help="Excecute backtest")
-    group.add_argument("-t", "--test", action="store_true", help="Run a predefined backtest")
+    group.add_argument("--test", action="store_true", help="Run a predefined backtest")
 
     args = parser.parse_args()
 
     if args.price:
-        if price := get_bitcoin_price():
-            print(f"Bitcoin price: ${price}")
-        else:
-            sys.exit("Failed to fetch price.")
+        try:
+            if price := get_bitcoin_price():
+                print(f"Bitcoin price: ${price}")
+            else:
+                sys.exit("Failed to fetch price.")
+        except Exception as e:
+                sys.exit(f"Error fetching price: {e}")
+
 
     elif args.backtest:
         df = load_asset_data()
@@ -55,7 +59,7 @@ def main():
 
 
         df_filtered = df.loc[buy:sell].copy()
-        run_backtest(df_filtered, usd_amount)
+        print(run_backtest(df_filtered, usd_amount))
         plot_close(df_filtered)
 
     elif args.test:
@@ -69,21 +73,16 @@ def main():
                     print("Invalid amount")
              
         df_filtered = df.loc["2021-01-01":"2025-01-01"].copy()
-        run_backtest(df_filtered, usd_amount)
+        print(run_backtest(df_filtered, usd_amount))
         plot_close(df_filtered)
     
 def get_bitcoin_price():
-    try:
-        url=f"https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-        response = requests.get(url)
-        data = response.json()
-        return float(data["price"])
-    except Exception as e:
-        print(f"Error fetching price: {e}")
-        return None
+    url=f"https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+    response = requests.get(url)
+    data = response.json()
+    return float(data["price"])
 
-
-# Shows profit or loss in the selected range
+# Calculates profit or loss in the selected range
 def run_backtest(df: pd.DataFrame, usd_amount):
 
     if df.empty:
@@ -93,13 +92,17 @@ def run_backtest(df: pd.DataFrame, usd_amount):
     sell_price = df["close"].iloc[-1]
     profit = ((sell_price - buy_price)/buy_price) * 100
     final_amount = usd_amount * (1 + profit / 100)
-    
-    print("\nBacktest result:📈") if profit >= 0 else print("\nBacktest result:📉")
-    print(f"Buy price:  ${buy_price:.2f}")
-    print(f"Sell price: ${sell_price:.2f}")
-    print(f"Profit:     {profit:.2f}%")
-    print(f"Final amount in USD: ${final_amount:.2f}")
 
+    if profit >= 0:
+        results = "\nBacktest result:📈\n" 
+    else:
+        results = "\nBacktest result:📉\n"
+    results += f"Buy price:  ${buy_price:.2f}\n"
+    results += f"Sell price: ${sell_price:.2f}\n"
+    results += f"Profit:     {profit:.2f}%\n"
+    results += f"Final amount in USD: ${final_amount:.2f}\n"
+
+    return results
 
 # Plot price evolution in the selected range
 def plot_close(df):
