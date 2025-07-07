@@ -1,4 +1,10 @@
-# CS50 Python Final Project
+# Bitcoin Trading Backtest
+
+#### Video Demo: https://youtu.be/bcemaq-yutk
+
+#### Description: 
+
+A command-line tool that simulates Bitcoin investments using historical data. Users can check the current BTC price, run a manual backtest by selecting custom dates and investment, or execute a predefined test. The tool calculates profit or loss and plots the price chart using matplotlib.
 
 This repository contains the final project for **CS50's Introduction to Programming with Python**.
 
